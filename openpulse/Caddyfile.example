@@ -1,0 +1,9 @@
+{
+    local_certs
+    auto_https disable_redirects
+    default_sni TU_IP
+}
+https://TU_IP:8443 {
+    tls internal
+    reverse_proxy nextcloud:80
+}
