@@ -55,7 +55,6 @@ services:
       NEXTCLOUD_ADMIN_USER: ${NC_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD}
       NEXTCLOUD_TRUSTED_DOMAINS: "localhost 127.0.0.1 ${HOST_IP} nextcloud caddy"
-      OVERWRITEPROTOCOL: https
     volumes:
       - nc_data:/var/www/html
     networks:
@@ -67,10 +66,10 @@ services:
     ports:
       - "9980:9980"
     environment:
-      aliasgroup1: "https://${HOST_IP}:8443,http://${HOST_IP}:8080,http://localhost:8080"
+      aliasgroup1: "http://${HOST_IP}:8080,https://${HOST_IP}:8443,http://localhost:8080"
       username: ${COLLABORA_ADMIN}
       password: ${COLLABORA_PASSWORD}
-      extra_params: --o:ssl.enable=false --o:ssl.termination=true
+      extra_params: --o:ssl.enable=false --o:ssl.termination=false
     cap_add:
       - MKNOD
     networks:

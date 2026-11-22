@@ -12,7 +12,7 @@ echo "========================================================================"
 # PRUEBA 1: Exposicion de claves SRTP en SIP-UDP (:5070) vs SIP-TLS (:5061)
 # -----------------------------------------------------------------------------
 echo ""
-echo ">>> [PRUEBA 1 - LECCION 12 Cap. 9] Sniffing de claves SDES en SIP-UDP vs SIP-TLS (SIPS)"
+echo ">>> [PRUEBA 1 ] Sniffing de claves SDES en SIP-UDP vs SIP-TLS (SIPS)"
 echo "  [ANTES - SIP sobre UDP puerto 5060/5070]:"
 echo "    INVITE sip:1002@openpulse.local SIP/2.0"
 echo "    Content-Type: application/sdp"
@@ -29,7 +29,7 @@ echo "       Las claves SRTP (SDES) quedan protegidas contra sniffing en la red 
 # PRUEBA 2: Ataque de Enumeracion y Fuerza Bruta SIP REGISTER (Antes vs Despues)
 # -----------------------------------------------------------------------------
 echo ""
-echo ">>> [PRUEBA 2 - LECCION 12 Cap. 3 y 12] Fuerza Bruta SIP REGISTER y Firewall nftables + fail2ban"
+echo ">>> [PRUEBA 2 ] Fuerza Bruta SIP REGISTER y Firewall nftables + fail2ban"
 echo "  [ANTES del endurecimiento]:"
 echo "    Atacante (IP 10.101.62.250) envia rafaga de REGISTER sip:1001 con diccionario de claves."
 echo "    Asterisk procesa ilimitados intentos (401 Unauthorized) -> Riesgo de robo de cuenta y DoS."
