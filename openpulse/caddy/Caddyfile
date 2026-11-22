@@ -1,0 +1,31 @@
+{
+	auto_https disable_redirects
+	local_certs
+}
+
+# 1. Portal Nextcloud Hub + Talk en HTTPS (:8443)
+:8443 {
+	tls internal
+	reverse_proxy nextcloud:80 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 8443
+	}
+}
+
+# 2. Proveedor de Identidad Keycloak (OIDC + 2FA) en HTTPS (:8444)
+# Permite retirar el modo debug=true en Nextcloud (Hito TA3)
+:8444 {
+	tls internal
+	reverse_proxy keycloak:8080 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 8444
+	}
+}
+
+# 3. Edicion compartida Collabora Online (WOPI) en HTTPS (:9443)
+:9443 {
+	tls internal
+	reverse_proxy collabora:9980 {
+		header_up X-Forwarded-Proto https
+	}
+}

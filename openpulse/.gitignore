@@ -1,7 +1,1 @@
 .env
-
-monitoring/prometheus.yml
-caddy-root.crt
-*.pcap
-logs_llamada.txt
-Caddyfile

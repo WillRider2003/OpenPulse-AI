@@ -1,6 +1,8 @@
+name: openpulse
+
 services:
   db:
-    image: postgres:16
+    image: postgres:16.4-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: nextcloud
@@ -8,17 +10,40 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - openpulse_net
 
-  redis:
-    image: redis:7-alpine
+  # Reemplazo de Redis 7.4 (RSALv2/SSPLv1 no libre) por Valkey 8.0.1 (BSD-3-Clause libre)
+  valkey:
+    image: valkey/valkey:8.0.1-alpine
     restart: unless-stopped
+    networks:
+      openpulse_net:
+        aliases:
+          - redis
+
+  # Directorio central de identidades OpenLDAP (OpenLDAP Public License - OSI)
+  openldap:
+    image: osixia/openldap:1.5.0
+    restart: unless-stopped
+    environment:
+      LDAP_ORGANISATION: "OpenPulse AI - Estudio Contable Andes"
+      LDAP_DOMAIN: "openpulse.local"
+      LDAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+    ports:
+      - "389:389"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    networks:
+      - openpulse_net
 
   nextcloud:
-    image: nextcloud:stable-apache
+    image: nextcloud:29.0.8-apache
     restart: unless-stopped
     depends_on:
       - db
-      - redis
+      - valkey
     ports:
       - "8080:80"
     environment:
@@ -26,29 +51,34 @@ services:
       POSTGRES_DB: nextcloud
       POSTGRES_USER: nextcloud
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      REDIS_HOST: redis
+      REDIS_HOST: valkey
       NEXTCLOUD_ADMIN_USER: ${NC_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD}
-      NEXTCLOUD_TRUSTED_DOMAINS: localhost ${HOST_IP}
+      NEXTCLOUD_TRUSTED_DOMAINS: "localhost 127.0.0.1 ${HOST_IP} nextcloud caddy"
+      OVERWRITEPROTOCOL: https
     volumes:
       - nc_data:/var/www/html
+    networks:
+      - openpulse_net
 
   collabora:
-    image: collabora/code:latest
+    image: collabora/code:24.04.8.2.1
     restart: unless-stopped
     ports:
       - "9980:9980"
     environment:
-      aliasgroup1: http://${HOST_IP}:8080
+      aliasgroup1: "https://${HOST_IP}:8443,http://${HOST_IP}:8080,http://localhost:8080"
       username: ${COLLABORA_ADMIN}
       password: ${COLLABORA_PASSWORD}
-      extra_params: --o:ssl.enable=false --o:ssl.termination=false
+      extra_params: --o:ssl.enable=false --o:ssl.termination=true
     cap_add:
       - MKNOD
+    networks:
+      - openpulse_net
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
-    command: start-dev
+    image: quay.io/keycloak/keycloak:26.0.5
+    command: start-dev --http-enabled=true --hostname-strict=false --proxy-headers=xforwarded
     restart: unless-stopped
     ports:
       - "8081:8080"
@@ -57,29 +87,119 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
     volumes:
       - kc_data:/opt/keycloak/data
+    networks:
+      - openpulse_net
+
+  # Proxy inverso HTTPS con CA interna para Nextcloud (:8443), Keycloak (:8444) y Collabora (:9443)
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    depends_on:
+      - nextcloud
+      - keycloak
+      - collabora
+    ports:
+      - "8443:8443"
+      - "8444:8444"
+      - "9443:9443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - openpulse_net
 
   asterisk:
     build: ./asterisk
     restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
     ports:
       - "5070:5060/udp"
+      - "5061:5061/tcp"
+      - "8088:8088/tcp"
+      - "8089:8089/tcp"
       - "10000-10100:10000-10100/udp"
     volumes:
-      - ./asterisk/conf/pjsip.conf:/etc/asterisk/pjsip.conf:ro
-      - ./asterisk/conf/extensions.conf:/etc/asterisk/extensions.conf:ro
-      - ./asterisk/conf/rtp.conf:/etc/asterisk/rtp.conf:ro
+      - ./asterisk/conf/pjsip.conf:/etc/asterisk/pjsip.conf
+      - ./asterisk/conf/extensions.conf:/etc/asterisk/extensions.conf
+      - ./asterisk/conf/rtp.conf:/etc/asterisk/rtp.conf
+      - ./asterisk/conf/http.conf:/etc/asterisk/http.conf
+      - ./asterisk/scripts:/opt/openpulse/scripts
+    networks:
+      - openpulse_net
+
+  # Servidor STUN/TURN libre (BSD-3-Clause) para WebRTC detras de NAT
+  coturn:
+    image: coturn/coturn:4.6.2-alpine
+    restart: unless-stopped
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+    command:
+      - -n
+      - --log-file=stdout
+      - --fingerprint
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SECRET:-OpenPulseTurnSecret2026!}
+      - --realm=openpulse.local
+    networks:
+      - openpulse_net
 
   uptime-kuma:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:1.23.15
     restart: unless-stopped
     ports:
       - "3001:3001"
     volumes:
       - kuma_data:/app/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro   # para vigilar el contenedor de Asterisk
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - openpulse_net
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - openpulse_net
+
+  # Edicion Grafana OSS (AGPL-3.0 100% libre, sin codigo propietario Enterprise)
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-OpenPulseAdmin2026!}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - openpulse_net
+
+networks:
+  openpulse_net:
+    driver: bridge
 
 volumes:
   db_data:
   nc_data:
   kc_data:
+  ldap_data:
+  ldap_config:
+  caddy_data:
+  caddy_config:
   kuma_data:
+  prometheus_data:
+  grafana_data:
