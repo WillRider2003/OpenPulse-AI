@@ -1,11 +1,10 @@
 {
 	auto_https disable_redirects
 	local_certs
-	default_sni 192.168.18.193
+	default_sni 192.168.35.131
 }
 
-# 1. Portal Nextcloud Hub + Talk en HTTPS (:8443)
-https://192.168.18.193:8443, https://localhost:8443 {
+https://192.168.35.131:8443, https://localhost:8443 {
 	tls internal
 	reverse_proxy nextcloud:80 {
 		header_up X-Forwarded-Proto https
@@ -13,8 +12,7 @@ https://192.168.18.193:8443, https://localhost:8443 {
 	}
 }
 
-# 2. Proveedor de Identidad Keycloak (OIDC + 2FA) en HTTPS (:8444)
-https://192.168.18.193:8444, https://localhost:8444 {
+https://192.168.35.131:8444, https://localhost:8444 {
 	tls internal
 	reverse_proxy keycloak:8080 {
 		header_up X-Forwarded-Proto https
@@ -22,8 +20,7 @@ https://192.168.18.193:8444, https://localhost:8444 {
 	}
 }
 
-# 3. Edicion compartida Collabora Online (WOPI) en HTTPS (:9443)
-https://192.168.18.193:9443, https://localhost:9443 {
+https://192.168.35.131:9443, https://localhost:9443 {
 	tls internal
 	reverse_proxy collabora:9980 {
 		header_up X-Forwarded-Proto https
