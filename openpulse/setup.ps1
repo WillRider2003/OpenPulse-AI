@@ -39,14 +39,46 @@ if (-not $ip -or $ip -eq "PONER_TU_IP") {
 }
 Ok "HOST_IP = $ip"
 
-# ---------------------------------------------------------------- 2. IP en Asterisk (UDP 5070 y SIP-TLS 5061)
-Paso "Actualizando HOST_IP en asterisk/conf/pjsip.conf (SIP-UDP :5070 y SIP-TLS :5061)"
+# ---------------------------------------------------------------- 2. IP en Asterisk (UDP 5070 y SIP-TLS 5061) y Caddyfile
+Paso "Actualizando HOST_IP en asterisk/conf/pjsip.conf y caddy/Caddyfile"
 $pj = "asterisk\conf\pjsip.conf"
 $contenido = Get-Content $pj
 $contenido = $contenido -replace '^external_media_address=.*', "external_media_address=$ip"
 $contenido = $contenido -replace '^external_signaling_address=.*', "external_signaling_address=$ip"
 $contenido | Set-Content $pj -Encoding ascii
-Ok "pjsip.conf apunta a $ip (SIP-UDP :5070, SIP-TLS :5061, SRTP sdes y DSCP EF=46)"
+
+$caddyContent = @"
+{
+	auto_https disable_redirects
+	local_certs
+	default_sni $ip
+}
+
+https://${ip}:8443, https://localhost:8443 {
+	tls internal
+	reverse_proxy nextcloud:80 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 8443
+	}
+}
+
+https://${ip}:8444, https://localhost:8444 {
+	tls internal
+	reverse_proxy keycloak:8080 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 8444
+	}
+}
+
+https://${ip}:9443, https://localhost:9443 {
+	tls internal
+	reverse_proxy collabora:9980 {
+		header_up X-Forwarded-Proto https
+	}
+}
+"@
+$caddyContent | Set-Content "caddy\Caddyfile" -Encoding ascii
+Ok "pjsip.conf y caddy/Caddyfile actualizados a $ip"
 
 # ---------------------------------------------------------------- 3. Contenedores
 Paso "Levantando los contenedores de OpenPulse AI (la primera vez tarda unos minutos)"
@@ -87,6 +119,8 @@ occ config:system:set trusted_domains 0 --value="localhost"
 occ config:system:set trusted_domains 1 --value=$ip
 occ config:system:set trusted_domains 2 --value="nextcloud"
 occ config:system:set trusted_domains 3 --value="caddy"
+occ config:system:delete overwriteprotocol 2>$null
+occ config:system:set overwrite.cli.url --value="http://${ip}:8080"
 # Permitir login OIDC tanto si entran por http://IP:8080 como por https://IP:8443 en el salon
 occ config:system:set debug --value=true --type=boolean
 
