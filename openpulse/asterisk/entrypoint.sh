@@ -22,6 +22,9 @@ fi
 if [ -d /opt/openpulse/scripts ]; then
     sed -i 's/\r$//' /opt/openpulse/scripts/*.sh 2>/dev/null || true
     chmod +x /opt/openpulse/scripts/*.sh 2>/dev/null || true
+    if [ -f /opt/openpulse/scripts/sla_exporter.py ]; then
+        python3 /opt/openpulse/scripts/sla_exporter.py >/var/log/openpulse_sla_exporter.log 2>&1 &
+    fi
 fi
 
 exec asterisk -f -vvv

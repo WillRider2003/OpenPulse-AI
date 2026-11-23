@@ -43,8 +43,9 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-openpulse" },
-          "expr": "monitor_status or openpulse_service_up",
-          "legendFormat": "{{monitor_name}}{{servicio}}",
+          "expr": "openpulse_service_up",
+          "legendFormat": "{{servicio}}",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -69,8 +70,9 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-openpulse" },
-          "expr": "monitor_response_time or openpulse_service_latency_ms",
-          "legendFormat": "{{monitor_name}}{{servicio}}",
+          "expr": "openpulse_service_latency_ms",
+          "legendFormat": "{{servicio}}",
+          "range": true,
           "refId": "A"
         }
       ],
