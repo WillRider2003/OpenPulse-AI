@@ -1,28 +1,40 @@
 # Acta Automática de Reunión — Estudio Contable Andes & Asociados S.A.C.
 
-- **Plataforma:** OpenPulse AI (Nextcloud Talk + Asistente Edge AI Local)
-- **Fecha y hora de generación:** 22/11/2026 19:37:13
-- **Motores de IA (100 % Software Libre OSI):** OpenAI Whisper (`MIT`) + Ollama (`MIT`) con modelo `Qwen2.5-3B-Instruct` (`Apache-2.0`)
-- **Cumplimiento legal:** Procesamiento 100 % local en el servidor del cliente (Ley N.° 29733 de Protección de Datos Personales y *Privacy by Design*, Lección 14)
+- **Plataforma:** OpenPulse AI (Nextcloud Hub + Edge AI Local)
+- **Fecha y hora de generación:** 23/11/2026 00:55:31
+- **Fuente procesada:** `audio_prueba_reunion.wav`
+- **Motores de IA (100 % Software Libre OSI):** `faster-whisper` (`MIT`, tiempo STT: 1.7 s) + `Ollama` (`MIT`) con modelo `qwen2.5:0.5b` (`Apache-2.0`, tiempo LLM: 21.81 s)
+- **Privacidad (Lección 14 / Ley N.° 29733):** Procesamiento 100 % local en el servidor del cliente (0 bytes enviados a servicios en la nube)
 
 ---
 
-## 1. Resumen Ejecutivo
-El equipo del **Estudio Contable Andes & Asociados S.A.C.** revisó el estado del cierre tributario mensual de noviembre para su cartera de 120 empresas clientes. Se confirmó la disponibilidad de la hoja de trabajo consolidada en **Collabora Online**, la atención de consultas telefónicas por **Asterisk (SRTP + SIP-TLS)** y la operatividad al 100 % del doble factor de autenticación en **Keycloak** y las copias de respaldo diarias.
+## 1. Síntesis y Acuerdos Generados por IA Local (`qwen2.5:0.5b`)
 
-## 2. Acuerdos y Tareas Asignadas
+1) Un 'Resumen Ejecutivo' en un solo parrafo:
+El equipo del estudio contable ante si asociados acordó tres tareas principales: 
+- Lucía Gil revisará la declaración de impuestos en Coyabora o la innantes de la seis de la tarde.
+- Rosel pretéla tenderá las llamadas difradas con los clientes por estarisque.
+- Abdan Baiejo coordinará a la videoyamada con la Junta de Socios para el viernes a las diez de la mañana.
 
-| N.° | Acuerdo / Compromiso | Responsable | Fecha límite | Servicio UC asociado |
-|---|---|---|---|---|
-| 1 | Validar declaraciones IGV-Renta de RUC terminados en 0 y 1 en la hoja compartida | Lucía Gil (`lgil`) | Hoy, 18:00 h | Collabora Online (Nextcloud Office) |
-| 2 | Cerrar la conciliación de detracciones tras llamadas de consulta con clientes | Rosell Pretel (`rpretel`) | Hoy, 17:00 h | Telefonía IP Asterisk (SRTP / SIP-TLS) |
-| 3 | Programar y moderar videollamada de junta mensual de socios | Abdón Vallejo (`avallejo`) | Viernes, 10:00 h | Nextcloud Talk / Jitsi Meet + Presencia |
-| 4 | Auditar copia de respaldo cifrada diaria y sesiones con 2FA activo | Luis Paredes (`lparedes`) | Diario (automatizado) | Keycloak + Restic + Grafana SLA |
-| 5 | Aprobar y firmar acta mensual en carpeta de gobernanza institucional | Willian Antaurco (`wantaurco`) | Hoy, 19:00 h | Nextcloud Hub (SSO OIDC) |
+2) Una lista de 'Acuerdos y Tareas' con viñetas indicando accion y responsable si se mencionan:
+1. Acuerdo 1: Lucía Gil revisará la declaración de impuestos en Coyabora o la innantes de la seis de la tarde.
+   - Acción: Revisar
+   - Responsable: Lucía Gil
 
-## 3. Transcripción Completa con Marcas de Tiempo (Whisper STT)
-- **`[00:00:04]` Willian Antaurco (Socio Director):** Buenos dias equipo del Estudio Contable Andes. Iniciamos la reunion de cierre tributario mensual de noviembre con los 5 lideres de area conectados por Nextcloud Talk.
-- **`[00:00:19]` Lucia Gil (Lider Tributaria):** Ya subi a Collabora Online la hoja de calculo consolidada de las 120 empresas clientes. Necesitamos validar hoy las declaraciones IGV-Renta de los RUC terminados en 0 y 1.
-- **`[00:00:38]` Rosell Pretel (Consultor Senior):** Las consultas telefonicas con los clientes por Asterisk con cifrado SRTP ya quedaron atendidas. Propongo cerrar la conciliacion de detracciones antes de las 17:00.
-- **`[00:00:54]` Abdon Vallejo (Coordinador de Auditoria):** De acuerdo. Dejemos fijada la videollamada con la junta de socios para el viernes a las 10:00 a. m. y actualicemos nuestro estado de presencia durante la auditoria.
-- **`[00:01:11]` Luis Paredes (Seguridad y TI):** Confirmo que el respaldo cifrado diario de la base contable y el doble factor TOTP en Keycloak estan al 100 % operativos cumpliendo la Ley 29733.
+2. Acuerdo 2: Rosel pretéla tenderá las llamadas difradas con los clientes por estarisque.
+   - Acción: Tender
+   - Responsable: Rosel
+
+3. Acuerdo 3: Abdan Baiejo coordinará a la videoyamada con la Junta de Socios para el viernes a las diez de la mañana.
+   - Acción: Coordinar
+   - Responsable: Abdan Baiejo
+
+---
+
+## 2. Transcripción Literal con Marcas de Tiempo (Whisper STT)
+
+- **`[00:00:00 - 00:00:03]`** Buenos días, equipo del estudio contable ante si asociados.
+- **`[00:00:03 - 00:00:08]`** En la riunian de cierre tributario acordamos tres tareas principales.
+- **`[00:00:08 - 00:00:14]`** Primero, Lucía Gil Revisara hoy la declaración de impuestos en Coyabora o la innantes de la seis de la tarde.
+- **`[00:00:14 - 00:00:20]`** Segundo, Rosel pretéla tender a las llamadas difradas con los clientes por estarisque.
+- **`[00:00:20 - 00:00:26]`** Tercero, Abdan Baiejo coordinar a la videoyamada con la Junta de Socios para el viernes a las diez de la mañana.

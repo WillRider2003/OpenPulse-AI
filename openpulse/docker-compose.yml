@@ -187,6 +187,32 @@ services:
     networks:
       - openpulse_net
 
+  # Motor de inferencia LLM local Ollama (MIT) - Modelo Qwen2.5 (Apache-2.0)
+  ollama:
+    image: ollama/ollama:0.5.7
+    profiles: ["ia"]
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - openpulse_net
+
+  # Motor local de transcripcion de voz a texto Whisper (faster-whisper - MIT)
+  whisper:
+    build: ./whisper
+    profiles: ["ia"]
+    restart: unless-stopped
+    environment:
+      WHISPER_MODEL: tiny
+    ports:
+      - "9000:9000"
+    volumes:
+      - whisper_cache:/root/.cache
+    networks:
+      - openpulse_net
+
 networks:
   openpulse_net:
     driver: bridge
@@ -202,3 +228,5 @@ volumes:
   kuma_data:
   prometheus_data:
   grafana_data:
+  ollama_data:
+  whisper_cache:
