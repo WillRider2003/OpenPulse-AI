@@ -57,10 +57,19 @@ function occ   { docker compose exec -T -u www-data nextcloud php occ @args }
 function kcadm { docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh @args }
 
 Paso "Esperando a que Nextcloud termine de instalarse"
+$dbPass  = $cfg["DB_PASSWORD"];       if (-not $dbPass)  { $dbPass = "OpenPulseDB2026!" }
+$ncAdmin = $cfg["NC_ADMIN_USER"];     if (-not $ncAdmin) { $ncAdmin = "admin" }
+$ncPass  = $cfg["NC_ADMIN_PASSWORD"]; if (-not $ncPass)  { $ncPass = "OpenPulseAdmin2026!" }
+
 $listo = $false
 for ($i = 0; $i -lt 90; $i++) {
     $st = (occ status --output=json 2>$null) -join ""
     if ($st -match '"installed":true') { $listo = $true; break }
+    if ($i -eq 6 -and $st -match '"installed":false') {
+        'CREATE ROLE nextcloud WITH SUPERUSER LOGIN PASSWORD ''' + $dbPass + ''';' | docker compose exec -T db psql -U openpulse -d nextcloud 2>$null | Out-Null
+        'ALTER ROLE nextcloud WITH SUPERUSER LOGIN PASSWORD ''' + $dbPass + ''';'  | docker compose exec -T db psql -U openpulse -d nextcloud 2>$null | Out-Null
+        occ maintenance:install --database="pgsql" --database-host="db" --database-name="nextcloud" --database-user="nextcloud" --database-pass="$dbPass" --admin-user="$ncAdmin" --admin-pass="$ncPass" 2>$null | Out-Null
+    }
     Start-Sleep -Seconds 5
 }
 if (-not $listo) {

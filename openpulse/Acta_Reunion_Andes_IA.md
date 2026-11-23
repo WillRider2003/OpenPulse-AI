@@ -1,7 +1,7 @@
 # Acta Automática de Reunión — Estudio Contable Andes & Asociados S.A.C.
 
 - **Plataforma:** OpenPulse AI (Nextcloud Talk + Asistente Edge AI Local)
-- **Fecha y hora:** 22 de noviembre de 2026, 11:30 a. m.
+- **Fecha y hora de generación:** 22/11/2026 19:37:13
 - **Motores de IA (100 % Software Libre OSI):** OpenAI Whisper (`MIT`) + Ollama (`MIT`) con modelo `Qwen2.5-3B-Instruct` (`Apache-2.0`)
 - **Cumplimiento legal:** Procesamiento 100 % local en el servidor del cliente (Ley N.° 29733 de Protección de Datos Personales y *Privacy by Design*, Lección 14)
 
