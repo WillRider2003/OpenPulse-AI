@@ -1,1 +1,3 @@
 .env
+
+caddy/caddy_root_ca.crt
