@@ -18,15 +18,16 @@ getenv() { grep -E "^$1=" .env | head -1 | cut -d= -f2- | tr -d '\r' | sed 's/[[
 IP=$(getenv HOST_IP)
 KC_USER=$(getenv KC_ADMIN)
 KC_PASS=$(getenv KC_ADMIN_PASSWORD)
-USER_PASS=$(getenv USERS_PASSWORD); USER_PASS=${USER_PASS:-OpenPulse2026!}
+USER_PASS=$(getenv USERS_PASSWORD); [ -n "$USER_PASS" ] && [ "$USER_PASS" != "CAMBIAR" ] || { echo "Define USERS_PASSWORD en .env"; exit 1; }
 if [ -z "$IP" ] || [ "$IP" = "PONER_TU_IP" ]; then echo "Define HOST_IP en .env (ver con: ip -4 addr)"; exit 1; fi
 ok "HOST_IP = $IP"
 
 # ---------------------------------------------------------------- 2. IP en Asterisk
 paso "Actualizando la IP en asterisk/conf/pjsip.conf"
-sed -i.bak -e "s/^external_media_address=.*/external_media_address=$IP/" \
-           -e "s/^external_signaling_address=.*/external_signaling_address=$IP/" asterisk/conf/pjsip.conf
-rm -f asterisk/conf/pjsip.conf.bak
+SIP_PASS=$(getenv SIP_PASSWORD)
+[ -n "$SIP_PASS" ] && [ "$SIP_PASS" != "CAMBIAR" ] || { echo "Define SIP_PASSWORD en .env"; exit 1; }
+# pjsip.conf se genera desde la plantilla y no se sube a Git
+sed -e "s/__HOST_IP__/$IP/g" -e "s/__SIP_PASSWORD__/$SIP_PASS/g" asterisk/conf/pjsip.conf.template > asterisk/conf/pjsip.conf
 ok "pjsip.conf apunta a $IP (puerto SIP 5070)"
 
 # ---------------------------------------------------------------- 3. Contenedores
@@ -114,7 +115,7 @@ cat <<EOF
  Keycloak (consola):   http://$IP:8081    $KC_USER / (KC_ADMIN_PASSWORD del .env)
  Collabora:            http://$IP:9980/hosting/discovery
  Uptime Kuma:          http://localhost:3001
- Asterisk (SIP):       $IP:5070 (UDP)   extensiones 1001-1005, clave Clave100X!
+ Asterisk (SIP):       $IP:5070 (UDP)   extensiones 1001-1005, clave SIP_PASSWORD de .env
 
  Usuarios de Nextcloud y de Keycloak: clave $USER_PASS
    Nextcloud: wantaurco, rpretel, avallejo, lgil, lparedes

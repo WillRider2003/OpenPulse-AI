@@ -1,0 +1,15 @@
+# OpenPulse AI - Bloqueo de fuerza bruta SIP (TA3)
+# Tres fallos de autenticacion en 60 s bloquean la IP durante 10 minutos.
+# Nota: con Docker Desktop la IP de origen puede llegar traducida a la puerta de enlace
+# de Docker; en un servidor Linux con Docker Engine se conserva la IP real del atacante.
+[asterisk]
+enabled  = true
+filter   = asterisk
+port     = 5060,5061
+protocol = all
+logpath  = /var/log/asterisk/messages
+backend  = auto
+maxretry = 3
+findtime = 60
+bantime  = 600
+banaction = nftables-allports

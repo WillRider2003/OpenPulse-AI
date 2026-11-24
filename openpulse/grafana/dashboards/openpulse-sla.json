@@ -108,7 +108,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-openpulse" },
-          "expr": "openpulse_voice_mos_score",
+          "expr": "min(openpulse_voice_mos_score)",
           "legendFormat": "MOS Modelo E (G.107)",
           "refId": "A"
         }
@@ -146,8 +146,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-openpulse" },
-          "expr": "openpulse_voice_jitter_ms",
-          "legendFormat": "Jitter RTCP ({{modo}})",
+          "expr": "max(openpulse_voice_jitter_ms)",
+          "legendFormat": "Jitter RTCP (máximo de los canales activos)",
           "refId": "A"
         }
       ],

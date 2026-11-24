@@ -53,7 +53,7 @@ powershell -ExecutionPolicy Bypass -File .\setup.ps1
 **Qué configura automáticamente `setup.ps1`:**
 1. Actualiza `IP_LAB` en `asterisk/conf/pjsip.conf` y `caddy/Caddyfile`.
 2. Levanta los 12 contenedores base (`Nextcloud`, `Collabora`, `Keycloak`, `OpenLDAP`, `Asterisk`, `coturn`, `Caddy`, `PostgreSQL`, `Valkey 8`, `Uptime Kuma`, `Prometheus`, `Grafana OSS`).
-3. Instala Talk, Nextcloud Office (Collabora), OpenID Connect y Presencia; crea el grupo `openpulse` y los 5 usuarios (`wantaurco`, `rpretel`, `avallejo`, `lgil`, `lparedes`, clave `OpenPulse2026!`).
+3. Instala Talk, Nextcloud Office (Collabora), OpenID Connect y Presencia; crea el grupo `openpulse` y los 5 usuarios (`wantaurco`, `rpretel`, `avallejo`, `lgil`, `lparedes`, clave definida en `USERS_PASSWORD` de `.env`).
 4. Conecta Nextcloud con Collabora Online, `coturn` y el botón **«Iniciar sesión con Keycloak»**.
 5. Activa las colas de prioridad **QoS (`tc` HTB)**, el firewall **`nftables`** y el exportador Prometheus en vivo (`:9105/metrics`).
 
@@ -77,13 +77,13 @@ Hacer doble clic en `caddy\caddy_root_ca.crt` $\rightarrow$ **Instalar certifica
 
 | Servicio | Dirección URL (reemplazar `IP_LAB`) | Usuario | Contraseña |
 |---|---|---|---|
-| **Nextcloud (HTTP – ideal Collabora)** | `http://IP_LAB:8080/login` | `wantaurco`, `rpretel`, `avallejo`, `lgil`, `lparedes` | `OpenPulse2026!` |
-| **Nextcloud (HTTPS vía Caddy)** | `https://IP_LAB:8443/login` | *(mismos usuarios o botón Keycloak)* | `OpenPulse2026!` |
-| **Keycloak (SSO + 2FA)** | `http://IP_LAB:8081` o `https://IP_LAB:8444` | `willian.antaurco`, `abdon.vallejo`, etc. (admin: `wantaurco.admin` / `admin`) | Usuarios: `OpenPulse2026!` / Admin: `OpenPulseAdmin2026!` |
-| **Grafana OSS (Tablero SLA en verde)** | `http://IP_LAB:3000` | `admin` | `OpenPulseAdmin2026!` |
+| **Nextcloud (HTTP – ideal Collabora)** | `http://IP_LAB:8080/login` | `wantaurco`, `rpretel`, `avallejo`, `lgil`, `lparedes` | `USERS_PASSWORD` de `.env` |
+| **Nextcloud (HTTPS vía Caddy)** | `https://IP_LAB:8443/login` | *(mismos usuarios o botón Keycloak)* | `USERS_PASSWORD` de `.env` |
+| **Keycloak (SSO + 2FA)** | `http://IP_LAB:8081` o `https://IP_LAB:8444` | `willian.antaurco`, `abdon.vallejo`, etc. (admin: `wantaurco.admin` / `admin`) | `USERS_PASSWORD` / `KC_ADMIN_PASSWORD` de `.env` |
+| **Grafana OSS (Tablero SLA en verde)** | `http://IP_LAB:3000` | `admin` | `GRAFANA_ADMIN_PASSWORD` de `.env` |
 | **Prometheus (Métricas SLA)** | `http://IP_LAB:9090/targets` | *(acceso directo)* | — |
 | **Uptime Kuma (Disponibilidad)** | `http://IP_LAB:3001` | *(cuenta creada en el navegador)* | — |
-| **Asterisk (Linphone SIP / SRTP)** | Dominio: `IP_LAB:5070` (UDP) o `IP_LAB:5061` (TLS) | Extensiones `1001` a `1005` | `Clave1001!` a `Clave1005!` |
+| **Asterisk (Linphone SIP / SRTP)** | Dominio: `IP_LAB:5070` (UDP) o `IP_LAB:5061` (TLS) | Extensiones `1001` a `1005` | `SIP_PASSWORD` de `.env` |
 
 ---
 
@@ -92,12 +92,12 @@ Hacer doble clic en `caddy\caddy_root_ca.crt` $\rightarrow$ **Instalar certifica
 ### Demo 1 — Inicio de Sesión Único (SSO) con Doble Factor TOTP *(Willian Antaurco)*
 1. Abrir navegador (preferiblemente **Mozilla Firefox**, software libre) en una ventana nueva en **`https://IP_LAB:8443/login`** (o `http://IP_LAB:8080/login`).
 2. Hacer clic en **«Iniciar sesión con Keycloak»** (en la parte inferior del formulario).
-3. Ingresar con `willian.antaurco` / `OpenPulse2026!`, validar el código de 6 dígitos en **FreeOTP** (o Google Authenticator) y mostrar el ingreso automático a Nextcloud Hub.
+3. Ingresar con `willian.antaurco` y su clave, validar el código de 6 dígitos en **FreeOTP** (o Google Authenticator) y mostrar el ingreso automático a Nextcloud Hub.
 4. En otra pestaña (`http://IP_LAB:8081` o `https://IP_LAB:8444`), mostrar la consola de Keycloak con el realm **`openpulse`**, los 5 usuarios y el administrador nominal **`wantaurco.admin`**.
 
 ### Demo 2 — Telefonía IP Cifrada (SRTP + SIP-TLS) y Calidad de Voz *(Rosell Pretel)*
-1. En **PC Cliente 1**, abrir **Linphone** con la cuenta `1001` (`Clave1001!`, dominio `IP_LAB:5070`, transporte `UDP`, códec **`PCMU`** activo y en *Preferencias $\rightarrow$ Llamadas $\rightarrow$ Cifrado de medios* elegir **`SRTP`**).
-2. En **PC Cliente 2 o celular**, abrir **Linphone** con la cuenta `1002` (`Clave1002!`, dominio `IP_LAB:5070`, **`SRTP`** activo).
+1. En **PC Cliente 1**, abrir **Linphone** con la cuenta `1001` (clave `SIP_PASSWORD`, dominio `IP_LAB:5061`, transporte **`TLS`**, para que las claves SRTP viajen cifradas; códec **`PCMU`** activo y en *Preferencias $\rightarrow$ Llamadas $\rightarrow$ Cifrado de medios* elegir **`SRTP`**).
+2. En **PC Cliente 2 o celular**, abrir **Linphone** con la cuenta `1002` (clave `SIP_PASSWORD`, dominio `IP_LAB:5061`, transporte **`TLS`**, **`SRTP`** activo).
 3. Verificar registro en el PowerShell del Servidor:
    ```powershell
    docker compose exec asterisk asterisk -rx "pjsip show contacts"
@@ -134,8 +134,8 @@ Demostrarle al JP que funciona **100 % en local con un audio nuevo grabado frent
 4. Actualizar (`F5`) la pestaña de **Archivos (Files)** en Nextcloud en cualquier PC del salón y abrir **`Acta_Demo_V305.md`** en vivo.
 
 ### Demo 6 — Monitoreo del SLA en Tiempo Real *(Luis Paredes)*
-1. Abrir **Grafana OSS** en **`http://IP_LAB:3000`** (`admin` / `OpenPulseAdmin2026!`) $\rightarrow$ **Dashboards $\rightarrow$ OpenPulse AI – SLA** (poner rango `Last 15 minutes` y `Refresh 10s`).
-2. Mostrar los **6 servicios en verde (`ACTIVO (1)`)**, sus curvas de latencia real en ms, el medidor **MOS (`4.39`)**, **Jitter (`4.6 ms`)**, **`100 %`** de llamadas en SLA y los KPIs de colaboración.
+1. Abrir **Grafana OSS** en **`http://IP_LAB:3000`** (usuario `admin` y `GRAFANA_ADMIN_PASSWORD`) $\rightarrow$ **Dashboards $\rightarrow$ OpenPulse AI – SLA** (poner rango `Last 15 minutes` y `Refresh 10s`).
+2. Mostrar los **6 servicios en verde (`ACTIVO (1)`)**, sus curvas de latencia real en ms, y, con una llamada en curso, el MOS, el jitter y el RTT calculados en vivo desde Asterisk (sin llamadas los paneles de voz muestran «No data»).
 3. Mostrar **Prometheus** (`http://IP_LAB:9090/targets` con `openpulse-sla-exporter` en **`UP`**) y **Uptime Kuma** (`http://IP_LAB:3001`).
 
 ### Demo 7 — Licencias (SBOM), Experimento QoS A/B y Hacking Ético *(Luis Paredes)*
@@ -144,14 +144,16 @@ En PowerShell de la PC Servidor, ejecutar la batería completa (o cada script po
 # 1. Auditoria de licencias libres (Valkey 8, Grafana OSS, versiones fijas) y SBOM SPDX:
 powershell -ExecutionPolicy Bypass -File .\scripts\1_auditoria_licencias_sbom.ps1
 
-# 2. Experimento Controlado A/B de QoS (FIFO sin colas vs tc HTB Clase 1:10 EF=46 + nftables):
-docker compose exec asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh eth0
+# 2. Prueba A/B de QoS con dos llamadas Linphone iguales y la misma carga iperf3:
+docker compose exec asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh fifo eth0 2mbit   # escenario A
+docker compose exec asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh htb eth0 2mbit    # escenario B
+docker compose exec asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh estado eth0       # contadores
 
-# 3. Ciberseguridad y Hacking Etico Antes vs Despues (SIP-TLS :5061 + bloqueo de fuerza bruta en nftables):
+# 3. Endurecimiento real (SIP-TLS, nftables y estado de fail2ban). El ataque se hace aparte con nmap y SIPVicious:
 docker compose exec asterisk sh /opt/openpulse/scripts/hardening_security.sh
 
-# 4. Reporte completo de los 15/15 indicadores del SLA:
-python .\scripts\2_mediciones_completas_sla.py
+# 4. Indicadores de voz desde las llamadas medidas y p95 de los accesos HTTPS:
+python .\scripts\2_mediciones_completas_sla.py --llamadas mediciones\llamadas.csv --ip IP_LAB
 ```
 
 ---

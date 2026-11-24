@@ -28,10 +28,14 @@ foreach ($line in Get-Content ".env") {
 }
 $ip         = $cfg["HOST_IP"]
 $kcUser     = $cfg["KC_ADMIN"];         if (-not $kcUser)     { $kcUser = "admin" }
-$kcPass     = $cfg["KC_ADMIN_PASSWORD"];if (-not $kcPass)     { $kcPass = "OpenPulseAdmin2026!" }
+$kcPass     = $cfg["KC_ADMIN_PASSWORD"]
 $kcNomAdmin = $cfg["KC_NOMINAL_ADMIN"]; if (-not $kcNomAdmin) { $kcNomAdmin = "wantaurco.admin" }
-$userPass   = $cfg["USERS_PASSWORD"];   if (-not $userPass)   { $userPass = "OpenPulse2026!" }
-$turnSecret = $cfg["TURN_SECRET"];      if (-not $turnSecret) { $turnSecret = "OpenPulseTurnSecret2026!" }
+$userPass   = $cfg["USERS_PASSWORD"]
+$turnSecret = $cfg["TURN_SECRET"]
+$sipPass    = $cfg["SIP_PASSWORD"]
+foreach ($k in @("KC_ADMIN_PASSWORD","USERS_PASSWORD","TURN_SECRET","SIP_PASSWORD","DB_PASSWORD","NC_ADMIN_PASSWORD","GRAFANA_ADMIN_PASSWORD")) {
+    if (-not $cfg[$k] -or $cfg[$k] -eq "CAMBIAR") { Write-Host "Define $k en .env (no uses el valor CAMBIAR)." -ForegroundColor Red; exit 1 }
+}
 
 if (-not $ip -or $ip -eq "PONER_TU_IP") {
     $ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match "Wi-Fi|Ethernet" -and $_.IPAddress -notmatch "^169\.254" } | Select-Object -First 1).IPAddress
@@ -41,11 +45,10 @@ Ok "HOST_IP = $ip"
 
 # ---------------------------------------------------------------- 2. IP en Asterisk (UDP 5070 y SIP-TLS 5061) y Caddyfile
 Paso "Actualizando HOST_IP en asterisk/conf/pjsip.conf y caddy/Caddyfile"
+# pjsip.conf se genera desde la plantilla y no se sube a Git (contiene las claves SIP)
 $pj = "asterisk\conf\pjsip.conf"
-$contenido = Get-Content $pj
-$contenido = $contenido -replace '^external_media_address=.*', "external_media_address=$ip"
-$contenido = $contenido -replace '^external_signaling_address=.*', "external_signaling_address=$ip"
-$contenido | Set-Content $pj -Encoding ascii
+$contenido = (Get-Content "asterisk\conf\pjsip.conf.template" -Raw) -replace '__HOST_IP__', $ip -replace '__SIP_PASSWORD__', $sipPass
+$contenido | Set-Content $pj -Encoding ascii -NoNewline
 
 $caddyContent = @"
 {
@@ -89,9 +92,9 @@ function occ   { docker compose exec -T -u www-data nextcloud php occ @args }
 function kcadm { docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh @args }
 
 Paso "Esperando a que Nextcloud termine de instalarse"
-$dbPass  = $cfg["DB_PASSWORD"];       if (-not $dbPass)  { $dbPass = "OpenPulseDB2026!" }
+$dbPass  = $cfg["DB_PASSWORD"]
 $ncAdmin = $cfg["NC_ADMIN_USER"];     if (-not $ncAdmin) { $ncAdmin = "admin" }
-$ncPass  = $cfg["NC_ADMIN_PASSWORD"]; if (-not $ncPass)  { $ncPass = "OpenPulseAdmin2026!" }
+$ncPass  = $cfg["NC_ADMIN_PASSWORD"]
 
 $listo = $false
 for ($i = 0; $i -lt 90; $i++) {
@@ -121,7 +124,8 @@ occ config:system:set trusted_domains 2 --value="nextcloud"
 occ config:system:set trusted_domains 3 --value="caddy"
 occ config:system:delete overwriteprotocol 2>$null
 occ config:system:set overwrite.cli.url --value="http://${ip}:8080"
-# Permitir login OIDC tanto si entran por http://IP:8080 como por https://IP:8443 en el salon
+# El login OIDC por la URL HTTP de Keycloak (:8081) aun necesita debug=true en Nextcloud.
+# Tarea WA_04: registrar el proveedor con https://IP:8444 y la CA de Caddy, y luego poner debug=false.
 occ config:system:set debug --value=true --type=boolean
 
 Paso "Configurando servidor STUN/TURN coturn (:3478) en Nextcloud Talk"
@@ -141,7 +145,7 @@ occ group:add openpulse 2>$null
 foreach ($u in $usuarios) {
     docker compose exec -T -u www-data -e "OC_PASS=$userPass" nextcloud php occ user:add --password-from-env "--display-name=$($u.nombre)" --group=openpulse $u.nc 2>$null
 }
-Ok "Usuarios wantaurco, rpretel, avallejo, lgil y lparedes listos (clave: $userPass)"
+Ok "Usuarios wantaurco, rpretel, avallejo, lgil y lparedes listos (clave: USERS_PASSWORD de .env)"
 
 Paso "Conectando Nextcloud con Collabora Online (edicion compartida de documentos)"
 occ richdocuments:activate-config "--wopi-url=http://${ip}:9980" "--callback-url=http://${ip}:8080"
@@ -162,9 +166,10 @@ if (-not $kcListo) {
 Ok "Sesion iniciada en Keycloak"
 
 Paso "Creando el realm openpulse y el administrador nominal '$kcNomAdmin'"
-'{"realm":"openpulse","enabled":true,"displayName":"OpenPulse AI","sslRequired":"none"}' | docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh create realms -f - 2>$null
-kcadm update realms/openpulse -s sslRequired=none 2>$null
-kcadm update realms/master -s sslRequired=none 2>$null
+'{"realm":"openpulse","enabled":true,"displayName":"OpenPulse AI","sslRequired":"external"}' | docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh create realms -f - 2>$null
+# "external": exige HTTPS salvo desde direcciones privadas (red del laboratorio)
+kcadm update realms/openpulse -s sslRequired=external 2>$null
+kcadm update realms/master -s sslRequired=external 2>$null
 
 # Administrador nominal en master
 $adminNominalJson = '{"username":"' + $kcNomAdmin + '","enabled":true,"emailVerified":true,"email":"a20221862@pucp.edu.pe","firstName":"Willian","lastName":"Antaurco (Admin Nominal)","requiredActions":["CONFIGURE_TOTP"]}'
@@ -199,7 +204,7 @@ Ok "Boton 'Iniciar sesion con Keycloak' activado en Nextcloud"
 
 # ---------------------------------------------------------------- 6. Aplicar QoS y Hardening en Asterisk
 Paso "Aplicando colas de prioridad QoS (tc HTB EF=46) y Firewall (nftables) en Asterisk"
-docker compose exec -T asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh eth0 | Out-Null
+docker compose exec -T asterisk sh /opt/openpulse/scripts/qos_experimento_ab.sh htb eth0 100mbit | Out-Null
 docker compose exec -T asterisk sh /opt/openpulse/scripts/hardening_security.sh | Out-Null
 Ok "Colas tc HTB (Clase 1:10 EF=46) y firewall nftables (openpulse_security) activos"
 
@@ -212,12 +217,12 @@ Write-Host " 1. Portal Nextcloud (HTTP):   http://${ip}:8080   (ideal para Colla
 Write-Host " 2. Portal Nextcloud (HTTPS):  https://${ip}:8443  (vía proxy Caddy TLS)"
 Write-Host " 3. Consola Keycloak (SSO):    http://${ip}:8081   o https://${ip}:8444"
 Write-Host " 4. Collabora Online:          http://${ip}:9980/hosting/discovery"
-Write-Host " 5. Tablero SLA Grafana OSS:   http://${ip}:3000   (admin / OpenPulseAdmin2026!)"
+Write-Host " 5. Tablero SLA Grafana OSS:   http://${ip}:3000   (admin / GRAFANA_ADMIN_PASSWORD de .env)"
 Write-Host " 6. Prometheus SLA Targets:    http://${ip}:9090/targets"
 Write-Host " 7. Uptime Kuma:               http://${ip}:3001"
 Write-Host " 8. Asterisk (Linphone):       Dominio ${ip}:5070 (UDP) o ${ip}:5061 (TLS)"
-Write-Host "    Extensiones: 1001 a 1005   Contraseñas: Clave1001! a Clave1005!"
+Write-Host "    Extensiones: 1001 a 1005   Clave: SIP_PASSWORD de .env"
 Write-Host ""
-Write-Host " Usuarios Nextcloud: wantaurco, rpretel, avallejo, lgil, lparedes (Clave: $userPass)"
+Write-Host " Usuarios Nextcloud: wantaurco, rpretel, avallejo, lgil, lparedes (clave: USERS_PASSWORD de .env)"
 Write-Host " Usuarios Keycloak : willian.antaurco, rosell.pretel, abdon.vallejo, lucia.gil, luis.paredes"
 Write-Host "=====================================================================" -ForegroundColor Green

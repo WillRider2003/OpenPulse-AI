@@ -1,3 +1,5 @@
+; PLANTILLA: setup.ps1 / setup.sh generan pjsip.conf reemplazando __HOST_IP__ y
+; __SIP_PASSWORD__ con los valores de .env. pjsip.conf no se sube a Git.
 ; =============================================================================
 ; OpenPulse AI - Configuracion PJSIP (Asterisk 20 LTS) - Version Final TA3
 ; Incluye:
@@ -14,8 +16,8 @@
 type=transport
 protocol=udp
 bind=0.0.0.0:5060
-external_media_address=192.168.35.131
-external_signaling_address=192.168.35.131
+external_media_address=__HOST_IP__
+external_signaling_address=__HOST_IP__
 external_signaling_port=5070
 tos=cs5
 cos=3
@@ -27,8 +29,8 @@ bind=0.0.0.0:5061
 cert_file=/etc/asterisk/keys/asterisk.crt
 priv_key_file=/etc/asterisk/keys/asterisk.key
 method=tlsv1_2
-external_media_address=192.168.35.131
-external_signaling_address=192.168.35.131
+external_media_address=__HOST_IP__
+external_signaling_address=__HOST_IP__
 external_signaling_port=5061
 tos=cs5
 cos=3
@@ -52,7 +54,7 @@ cos=3
 type=endpoint
 context=internos
 disallow=all
-allow=ulaw,alaw,opus
+allow=ulaw,alaw,opus,vp8,h264
 direct_media=no
 rtp_symmetric=yes
 force_rport=yes
@@ -64,6 +66,8 @@ tos_video=af41
 cos_video=4
 ; --- Voz cifrada SRTP (Leccion 09 y 12) ---
 media_encryption=sdes
+; optimistic=yes permite llamadas sin SRTP si el cliente no lo ofrece (necesario para SIPp sin SRTP).
+; En produccion usar media_encryption_optimistic=no para exigir SRTP.
 media_encryption_optimistic=yes
 dtls_Auto_generate_cert=yes
 
@@ -84,7 +88,7 @@ aors=1001
 callerid="Willian Antaurco" <1001>
 [1001](auth-base)
 username=1001
-password=Clave1001!
+password=__SIP_PASSWORD__
 [1001](aor-base)
 
 [1002](endpoint-base)
@@ -93,7 +97,7 @@ aors=1002
 callerid="Rosell Pretel" <1002>
 [1002](auth-base)
 username=1002
-password=Clave1002!
+password=__SIP_PASSWORD__
 [1002](aor-base)
 
 [1003](endpoint-base)
@@ -102,7 +106,7 @@ aors=1003
 callerid="Abdon Vallejo" <1003>
 [1003](auth-base)
 username=1003
-password=Clave1003!
+password=__SIP_PASSWORD__
 [1003](aor-base)
 
 [1004](endpoint-base)
@@ -111,7 +115,7 @@ aors=1004
 callerid="Lucia Gil" <1004>
 [1004](auth-base)
 username=1004
-password=Clave1004!
+password=__SIP_PASSWORD__
 [1004](aor-base)
 
 [1005](endpoint-base)
@@ -120,5 +124,5 @@ aors=1005
 callerid="Luis Paredes" <1005>
 [1005](auth-base)
 username=1005
-password=Clave1005!
+password=__SIP_PASSWORD__
 [1005](aor-base)

@@ -27,4 +27,11 @@ if [ -d /opt/openpulse/scripts ]; then
     fi
 fi
 
+# fail2ban: arranca con la regla de Asterisk (jail.d/asterisk.local montado desde el repositorio)
+mkdir -p /var/log/asterisk /var/run/fail2ban
+touch /var/log/asterisk/messages
+if command -v fail2ban-client >/dev/null 2>&1; then
+    fail2ban-client -x start >/var/log/openpulse_fail2ban.log 2>&1 || echo "[OpenPulse AI] fail2ban no pudo iniciar (ver /var/log/openpulse_fail2ban.log)"
+fi
+
 exec asterisk -f -vvv

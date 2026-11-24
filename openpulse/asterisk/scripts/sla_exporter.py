@@ -7,6 +7,7 @@ disponibilidad, latencia, calidad de voz (MOS/Jitter) y KPIs de colaboracion
 para el tablero "OpenPulse AI - SLA" en Grafana OSS.
 """
 import http.server
+import json
 import socket
 import ssl
 import subprocess
@@ -40,26 +41,56 @@ def probe_tcp(host: str, port: int) -> tuple[int, float]:
         ms = round((time.perf_counter() - t0) * 1000.0, 2)
         return 0, ms
 
-def leer_voz_asterisk() -> tuple[float, float, float]:
-    """Lee Jitter/Loss si hay llamada activa en Asterisk; si no, usa ultima bateria SLA."""
-    jitter_ms = 4.6
-    mos_score = 4.39
-    sla_ratio = 100.0
+CODECS = ("ulaw", "alaw", "opus", "g722", "gsm")
+
+
+def mos_modelo_e(rtt_ms: float, jitter_ms: float, loss_pct: float) -> float:
+    """Modelo E simplificado (ITU-T G.107), mismo calculo que la hoja calculo_mos.xlsx."""
+    ef = rtt_ms / 2.0 + 2.0 * jitter_ms + 10.0
+    if ef < 160:
+        r = 93.2 - ef / 40.0 - 2.5 * loss_pct
+    else:
+        r = 93.2 - (ef - 120.0) / 10.0 - 2.5 * loss_pct
+    r = max(0.0, min(100.0, r))
+    return round(1 + 0.035 * r + 7e-6 * r * (r - 60) * (100 - r), 2)
+
+
+def leer_voz_asterisk() -> list:
+    """Devuelve una lista de canales activos con jitter, perdida y RTT REALES.
+    Si no hay llamadas, la lista queda vacia y Prometheus no recibe valores de voz."""
+    canales = []
     try:
-        out = subprocess.check_output(
-            ["asterisk", "-rx", "pjsip show channelstats"],
-            stderr=subprocess.DEVNULL, text=True, timeout=2
-        )
-        for line in out.splitlines():
-            if "ulaw" in line or "alaw" in line or "opus" in line:
-                parts = line.split()
-                if len(parts) >= 8:
-                    jit_sec = float(parts[6])
-                    jitter_ms = round(max(1.2, jit_sec * 1000.0), 2)
-                    break
+        out = subprocess.check_output(["asterisk", "-rx", "pjsip show channelstats"],
+                                      stderr=subprocess.DEVNULL, text=True, timeout=2)
     except Exception:
-        pass
-    return mos_score, jitter_ms, sla_ratio
+        return canales
+    for line in out.splitlines():
+        tok = line.split()
+        idx = next((i for i, t in enumerate(tok) if t in CODECS), None)
+        if idx is None or len(tok) < idx + 10:
+            continue
+        try:
+            rx_count, rx_lost = int(tok[idx + 1]), int(tok[idx + 2])
+            rx_jit = float(tok[idx + 4])
+            rtt = float(tok[idx + 9])
+        except ValueError:
+            continue
+        loss = 100.0 * rx_lost / rx_count if rx_count else 0.0
+        canal = {"canal": tok[idx - 2], "jitter_ms": round(rx_jit * 1000, 2), "loss_pct": round(loss, 3), "rtt_ms": round(rtt * 1000, 2)}
+        if canal["rtt_ms"] > 0:  # sin RTCP valido no se estima el MOS
+            canal["mos"] = mos_modelo_e(canal["rtt_ms"], canal["jitter_ms"], canal["loss_pct"])
+        canales.append(canal)
+    return canales
+
+
+def leer_kpi_colaboracion() -> dict:
+    """Valores medidos por los scripts de prueba (chat, presencia, documentos), si existen."""
+    try:
+        with open("/opt/openpulse/scripts/kpi_colaboracion.json", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
 
 class MetricsHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -77,13 +108,8 @@ class MetricsHandler(http.server.BaseHTTPRequestHandler):
             ("valkey",      *probe_tcp("valkey", 6379)),
         ]
 
-        mos, jitter, sla_pct = leer_voz_asterisk()
-        lat_nc = next((lat for name, _, lat in servicios if name == "nextcloud"), 45.0)
-        lat_co = next((lat for name, _, lat in servicios if name == "collabora"), 25.0)
-
-        chat_ms = round(min(1800.0, max(180.0, lat_nc * 2.5 + 140.0)), 1)
-        pres_ms = round(min(4200.0, max(320.0, lat_nc * 3.2 + 210.0)), 1)
-        docs_ms = round(min(4500.0, max(780.0, lat_co * 10.0 + 720.0)), 1)
+        canales = leer_voz_asterisk()
+        kpi = leer_kpi_colaboracion()
 
         lines = [
             "# HELP openpulse_service_up Estado operativo del servicio (1 = Activo, 0 = Caido)",
@@ -99,22 +125,40 @@ class MetricsHandler(http.server.BaseHTTPRequestHandler):
         for name, _, lat in servicios:
             lines.append(f'openpulse_service_latency_ms{{servicio="{name}"}} {lat}')
 
+        # Voz: solo se publican valores si hay llamadas activas (sin llamadas, Grafana muestra "No data")
         lines += [
-            "# HELP openpulse_voice_mos_score Puntaje MOS estimado (Modelo E ITU-T G.107)",
-            "# TYPE openpulse_voice_mos_score gauge",
-            f"openpulse_voice_mos_score {mos}",
-            "# HELP openpulse_voice_jitter_ms Jitter RTCP medido en milisegundos con QoS EF 46",
+            "# HELP openpulse_voice_jitter_ms Jitter recibido por canal (RTCP de Asterisk)",
             "# TYPE openpulse_voice_jitter_ms gauge",
-            f'openpulse_voice_jitter_ms{{modo="QoS-EF46"}} {jitter}',
-            "# HELP openpulse_voice_sla_compliant_ratio Porcentaje de llamadas que cumplen umbrales del SLA",
-            "# TYPE openpulse_voice_sla_compliant_ratio gauge",
-            f"openpulse_voice_sla_compliant_ratio {sla_pct}",
-            "# HELP openpulse_collab_kpi_ms Latencia de KPIs de colaboracion en ms",
-            "# TYPE openpulse_collab_kpi_ms gauge",
-            f'openpulse_collab_kpi_ms{{kpi="Chat (<=2s)"}} {chat_ms}',
-            f'openpulse_collab_kpi_ms{{kpi="Presencia (<=5s)"}} {pres_ms}',
-            f'openpulse_collab_kpi_ms{{kpi="Documentos Collabora (<=5s)"}} {docs_ms}',
+            "# HELP openpulse_voice_loss_pct Perdida recibida por canal en porcentaje",
+            "# TYPE openpulse_voice_loss_pct gauge",
+            "# HELP openpulse_voice_rtt_ms RTT por canal (RTCP de Asterisk)",
+            "# TYPE openpulse_voice_rtt_ms gauge",
+            "# HELP openpulse_voice_mos_score MOS estimado con el modelo E por canal (solo con RTT valido)",
+            "# TYPE openpulse_voice_mos_score gauge",
         ]
+        for c in canales:
+            et = f'canal="{c["canal"]}"'
+            lines.append(f"openpulse_voice_jitter_ms{{{et}}} {c['jitter_ms']}")
+            lines.append(f"openpulse_voice_loss_pct{{{et}}} {c['loss_pct']}")
+            lines.append(f"openpulse_voice_rtt_ms{{{et}}} {c['rtt_ms']}")
+            if "mos" in c:
+                lines.append(f"openpulse_voice_mos_score{{{et}}} {c['mos']}")
+        if canales:
+            cumplen = sum(1 for c in canales if c["jitter_ms"] <= 30 and c["loss_pct"] <= 1 and 0 < c["rtt_ms"] <= 300)
+            lines += [
+                "# HELP openpulse_voice_sla_compliant_ratio Porcentaje de canales activos dentro de los umbrales del SLA",
+                "# TYPE openpulse_voice_sla_compliant_ratio gauge",
+                f"openpulse_voice_sla_compliant_ratio {round(100.0 * cumplen / len(canales), 1)}",
+            ]
+
+        # Colaboracion: solo valores medidos por los scripts de prueba
+        if kpi:
+            lines += [
+                "# HELP openpulse_collab_kpi_ms KPI de colaboracion medido por pruebas sinteticas (ms)",
+                "# TYPE openpulse_collab_kpi_ms gauge",
+            ]
+            for nombre, valor in kpi.items():
+                lines.append(f'openpulse_collab_kpi_ms{{kpi="{nombre}"}} {float(valor)}')
 
         body = ("\n".join(lines) + "\n").encode("utf-8")
         self.send_response(200)
