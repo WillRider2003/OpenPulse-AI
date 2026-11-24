@@ -1,18 +1,18 @@
 {
 	auto_https disable_redirects
 	local_certs
-	default_sni 192.168.35.131
+	default_sni {$HOST_IP}
 }
 
-https://192.168.35.131:8443, https://localhost:8443 {
+https://{$HOST_IP}:8443, https://localhost:8443 {
 	tls internal
-	reverse_proxy nextcloud:80 {
+	reverse_proxy nextcloud-proxy:80 {
 		header_up X-Forwarded-Proto https
 		header_up X-Forwarded-Port 8443
 	}
 }
 
-https://192.168.35.131:8444, https://localhost:8444 {
+https://{$HOST_IP}:8444, https://localhost:8444 {
 	tls internal
 	reverse_proxy keycloak:8080 {
 		header_up X-Forwarded-Proto https
@@ -20,9 +20,14 @@ https://192.168.35.131:8444, https://localhost:8444 {
 	}
 }
 
-https://192.168.35.131:9443, https://localhost:9443 {
+https://{$HOST_IP}:9443, https://localhost:9443 {
 	tls internal
 	reverse_proxy collabora:9980 {
 		header_up X-Forwarded-Proto https
 	}
+}
+
+https://{$HOST_IP}:8445, https://localhost:8445 {
+	tls internal
+	reverse_proxy portal:8092
 }

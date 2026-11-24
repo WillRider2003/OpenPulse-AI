@@ -55,11 +55,15 @@ services:
       REDIS_HOST: valkey
       NEXTCLOUD_ADMIN_USER: ${NC_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD}
+      APACHE_DISABLE_REWRITE_IP: "1"
+      TRUSTED_PROXIES: ${OPENPULSE_PROXY_IP:-172.31.245.14}
       NEXTCLOUD_TRUSTED_DOMAINS: "localhost 127.0.0.1 ${HOST_IP} nextcloud caddy"
     volumes:
       - nc_data:/var/www/html
     networks:
-      - openpulse_net
+      openpulse_net: {}
+      openpulse_proxy:
+        aliases: [nextcloud-proxy]
 
   collabora:
     image: collabora/code:24.04.8.2.1
@@ -68,9 +72,10 @@ services:
       - "9980:9980"
     environment:
       aliasgroup1: "http://${HOST_IP}:8080,https://${HOST_IP}:8443,http://localhost:8080"
+      aliasgroup2: "http://nextcloud:80"
       username: ${COLLABORA_ADMIN}
       password: ${COLLABORA_PASSWORD}
-      extra_params: --o:ssl.enable=false --o:ssl.termination=false
+      extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:server_name=${COLLABORA_PUBLIC_HOST:-${HOST_IP}:9443} --o:net.frame_ancestors=${NEXTCLOUD_PUBLIC_URL:-https://${HOST_IP}:8443}"
     cap_add:
       - MKNOD
     networks:
@@ -102,10 +107,44 @@ services:
       - "8443:8443"
       - "8444:8444"
       - "9443:9443"
+      - "8445:8445"
+    environment:
+      HOST_IP: ${HOST_IP}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      openpulse_net: {}
+      openpulse_proxy:
+        ipv4_address: ${OPENPULSE_PROXY_IP:-172.31.245.14}
+
+  # Portal Spring Web. Publicación en la LAN a través de Caddy en :8445.
+  portal:
+    build: ./portal
+    profiles: ["portal"]
+    restart: unless-stopped
+    depends_on:
+      - nextcloud
+    environment:
+      PORTAL_BIND: 0.0.0.0
+      PORTAL_SECURE_COOKIE: ${PORTAL_SECURE_COOKIE:-true}
+      NEXTCLOUD_INTERNAL_URL: http://nextcloud:80
+      NEXTCLOUD_PUBLIC_URL: ${NEXTCLOUD_PUBLIC_URL:-https://${HOST_IP}:8443}
+      NEXTCLOUD_TALK_URL: ${NEXTCLOUD_TALK_URL:-}
+      SIP_DOMAIN: ${SIP_DOMAIN:-${HOST_IP}}
+      SIP_PROBE_HOST: asterisk
+      SIP_TLS_PORT: 5061
+      GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-http://${HOST_IP}:3000}
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:-https://${HOST_IP}:8444}
+      WHISPER_URL: http://whisper:9000
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+      GEMINI_API_KEYS: ${GEMINI_API_KEYS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-flash-lite}
+    ports:
+      - "127.0.0.1:8092:8092"
     networks:
       - openpulse_net
 
@@ -196,7 +235,7 @@ services:
     profiles: ["ia"]
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
@@ -210,7 +249,7 @@ services:
     environment:
       WHISPER_MODEL: tiny
     ports:
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     volumes:
       - whisper_cache:/root/.cache
     networks:
@@ -219,6 +258,12 @@ services:
 networks:
   openpulse_net:
     driver: bridge
+  openpulse_proxy:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: ${OPENPULSE_PROXY_SUBNET:-172.31.245.0/28}
 
 volumes:
   db_data:

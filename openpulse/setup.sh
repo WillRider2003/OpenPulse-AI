@@ -66,7 +66,8 @@ while IFS='|' read -r NC NOMBRE KC FIRST LAST MAIL; do
 done <<< "$USUARIOS"
 
 paso "Conectando Nextcloud con Collabora"
-occ richdocuments:activate-config --wopi-url="http://$IP:9980" --callback-url="http://$IP:8080"
+occ richdocuments:activate-config --wopi-url="http://collabora:9980" --callback-url="http://nextcloud:80"
+occ config:app:set richdocuments public_wopi_url --value="https://$IP:9443"
 
 # ---------------------------------------------------------------- 5. Keycloak
 paso "Esperando a Keycloak"

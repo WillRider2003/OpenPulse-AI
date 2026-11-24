@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101e24">
+  <meta name="description" content="Portal de comunicaciones unificadas del equipo OpenPulse AI, TEL139 PUCP.">
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/app.js" defer></script>
+  <title>OpenPulse AI · Comunicaciones unificadas</title>
+</head>
+<body>
+  <a class="skip" href="#main">Ir al contenido</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <a href="#inicio" class="brand"><img src="/assets/mark.svg" alt="" width="38" height="38"><span>OpenPulse <b>AI</b><small>REDES UNIFICADAS</small></span></a>
+      <div class="division"></div>
+      <nav class="nav" aria-label="Menú principal">
+        <span class="nav-label">ESPACIO DE TRABAJO</span>
+        <a href="#inicio" data-view="inicio"><i data-icon="home"></i>Resumen</a>
+        <a href="#voz" data-view="voz"><i data-icon="phone"></i>Telefonía</a>
+        <a href="#talk" data-view="talk"><i data-icon="message"></i>Chat y video</a>
+        <a href="#nube" data-view="nube"><i data-icon="cloud"></i>Nube privada</a>
+        <a href="#asistente" data-view="asistente"><i data-icon="spark"></i>Asistente IA</a>
+        <span class="nav-label second">OPERACIÓN</span>
+        <a href="#operacion" data-view="operacion"><i data-icon="chart"></i>Operación y SLA</a>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="team-emblem"><i data-icon="grid"></i></div>
+        <div><strong>Proyecto TEL139</strong><small>Equipo OpenPulse AI · PUCP</small></div>
+      </div>
+    </aside>
+    <button class="scrim" id="scrim" aria-label="Cerrar menú" hidden></button>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs">
+          <button id="menu" class="button icon-only mobile-menu" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar"><i data-icon="menu"></i></button>
+          <span class="crumb-root">Espacio Andes</span><i class="crumb-divider" data-icon="chevron"></i><strong id="crumb">Resumen</strong>
+        </div>
+        <button class="button top-session" id="session-button" type="button"><i data-icon="login"></i><span>Conectar cuenta</span></button>
+      </header>
+      <main id="main" tabindex="-1">
+        <section class="view" id="view-inicio" aria-labelledby="home-title">
+          <div class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow"><span></span> ESTUDIO CONTABLE ANDES</p>
+              <h1 id="home-title">Comunicaciones<br>unificadas<span>.</span></h1>
+              <p>Conecta con tu equipo, colabora en la nube privada y convierte tus reuniones en acuerdos.</p>
+              <div class="button-row">
+                <a class="button mint" href="sip-linphone:?linphone-action=show"><i data-icon="phone"></i>Abrir Linphone</a>
+                <a class="button hero-secondary" href="#nube"><i data-icon="cloud"></i>Ir a la nube</a>
+              </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+              <div class="art-track track-a"></div><div class="art-track track-b"></div><div class="art-track track-c"></div><div class="art-track track-d"></div>
+              <div class="art-node node-phone"><i data-icon="phone"></i></div>
+              <div class="art-node node-chat"><i data-icon="message"></i></div>
+              <div class="art-node node-cloud"><i data-icon="cloud"></i></div>
+              <div class="art-node node-ai"><i data-icon="spark"></i></div>
+              <div class="art-center"><i data-icon="pulse"></i></div>
+            </div>
+          </div>
+          <div class="section-head"><div><h2>Herramientas de trabajo</h2><p>Elige cómo quieres conectar con tu equipo.</p></div></div>
+          <div class="service-grid">
+            <a href="#voz" class="service"><span class="tile teal"><i data-icon="phone"></i></span><span><strong>Telefonía IP</strong><small>Extensiones y prueba de eco</small></span><i class="service-icon" data-icon="chevron"></i></a>
+            <a href="#talk" class="service"><span class="tile blue"><i data-icon="video"></i></span><span><strong>Chat y video</strong><small>Conversaciones y salas de Talk</small></span><i class="service-icon" data-icon="chevron"></i></a>
+            <a href="#nube" class="service"><span class="tile violet"><i data-icon="cloud"></i></span><span><strong>Nube privada</strong><small>Archivos y edición colaborativa</small></span><i class="service-icon" data-icon="chevron"></i></a>
+            <a href="#asistente" class="service"><span class="tile amber"><i data-icon="spark"></i></span><span><strong>Asistente IA</strong><small>Transcripciones y actas</small></span><i class="service-icon" data-icon="chevron"></i></a>
+          </div>
+          <div class="dashboard-grid">
+            <article class="panel">
+              <div class="panel-title"><span class="tile teal"><i data-icon="users"></i></span><div><h2>Equipo OpenPulse AI</h2><p>Directorio de extensiones</p></div><a class="text-link" href="#voz">Ver directorio</a></div>
+              <div id="home-team" class="rows" aria-live="polite"><p class="state">Cargando directorio…</p></div>
+            </article>
+            <article class="panel">
+              <div class="panel-title"><span class="tile blue"><i data-icon="pulse"></i></span><div><h2>Estado de servicios</h2><p>Comprobaciones desde el portal</p></div><button class="button icon-only status-refresh" type="button" aria-label="Actualizar servicios"><i data-icon="refresh"></i></button></div>
+              <div id="home-status" class="rows" aria-live="polite"><p class="state">Consultando servicios…</p></div>
+              <div class="panel-foot"><a class="text-link" href="#operacion">Ver operación y SLA</a></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-voz" aria-labelledby="voice-title" hidden>
+          <div class="page-head"><p class="eyebrow"><i data-icon="phone"></i> ASTERISK · LINPHONE</p><h1 id="voice-title">Telefonía IP</h1><p>Llama a una extensión del equipo o verifica el audio con la prueba de eco.</p></div>
+          <div class="voice-strip">
+            <div><span class="mini-label">SERVIDOR SIP · TLS</span><strong id="sip-host">Consultando…</strong></div>
+            <div class="button-row"><a class="button primary" href="sip-linphone:?linphone-action=show"><i data-icon="phone"></i>Abrir Linphone</a><a class="button" id="echo" aria-disabled="true"><i data-icon="mic"></i>Probar eco · 600</a></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title"><span class="tile teal"><i data-icon="users"></i></span><div><h2>Directorio del equipo</h2><p>Extensiones de Asterisk y presencia de Nextcloud</p></div></div>
+            <div id="voice-team" class="rows"></div>
+          </div>
+          <div class="info-row"><i data-icon="phone"></i><p>Configura tu cuenta SIP en Linphone con el servidor y el transporte TLS. Si el sistema te pregunta qué aplicación usar, selecciona Linphone.</p><a href="https://www.linphone.org/en/docs/login-sip-account/" target="_blank" rel="noopener" class="text-link">Guía de Linphone</a></div>
+          <div class="info-row"><i data-icon="spark"></i><p>Si grabaste una reunión en Linphone con el consentimiento de los participantes, transcríbela y genera un acta.</p><a class="text-link" href="#asistente">Abrir asistente</a></div>
+        </section>
+
+        <section class="view" id="view-talk" aria-labelledby="talk-title" hidden>
+          <div class="page-head"><p class="eyebrow"><i data-icon="video"></i> NEXTCLOUD TALK</p><h1 id="talk-title">Chat y video</h1><p>Abre tus conversaciones de equipo, inicia una videollamada o consulta la presencia.</p></div>
+          <div class="panel">
+            <div class="panel-title"><span class="tile blue"><i data-icon="message"></i></span><div><h2>Conversaciones</h2><p>Salas y mensajes de tu cuenta</p></div><a class="button external-link" data-link="talk" target="_blank" rel="noopener"><i data-icon="external"></i>Abrir Talk</a></div>
+            <div id="room-list" class="rows" aria-live="polite"></div>
+          </div>
+          <div class="panel page-panel" id="talk-thread" hidden>
+            <div class="panel-title"><span class="tile blue"><i data-icon="message"></i></span><div><h2 id="thread-title"></h2><p>Mensajes recientes</p></div><div class="button-row"><button class="button icon-only" id="thread-refresh" type="button" aria-label="Actualizar mensajes"><i data-icon="refresh"></i></button><a class="button" id="thread-video" target="_blank" rel="noopener"><i data-icon="video"></i>Abrir videollamada en Talk</a></div></div>
+            <div class="chat-log" id="thread-log" role="log" aria-label="Mensajes de Talk"></div>
+            <form id="thread-form" class="composer">
+              <label class="sr-only" for="thread-message">Mensaje de Talk</label>
+              <textarea id="thread-message" rows="2" maxlength="1000" placeholder="Escribe un mensaje…" required></textarea>
+              <div class="composer-actions"><button type="submit" class="button primary" id="thread-send"><i data-icon="send"></i>Enviar mensaje</button></div>
+            </form>
+          </div>
+          <div class="panel page-panel">
+            <div class="panel-title"><span class="tile teal"><i data-icon="users"></i></span><div><h2>Presencia del equipo</h2><p>Estados publicados en Nextcloud</p></div><button class="button icon-only presence-refresh" type="button" aria-label="Actualizar presencia"><i data-icon="refresh"></i></button></div>
+            <div id="talk-team" class="rows"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-nube" aria-labelledby="cloud-title" hidden>
+          <div class="page-head"><p class="eyebrow"><i data-icon="cloud"></i> NEXTCLOUD · COLLABORA</p><h1 id="cloud-title">Nube privada</h1><p>Consulta, sube y descarga tus archivos. Abre documentos compatibles en Nextcloud Office.</p></div>
+          <div class="panel">
+            <div class="panel-title"><span class="tile violet"><i data-icon="folder"></i></span><div><h2>Archivos</h2><p id="cloud-path">Mi unidad</p></div>
+              <div class="button-row">
+                <button class="button primary" type="button" id="upload-button" disabled><i data-icon="upload"></i>Subir archivo</button>
+                <input type="file" id="upload-file" hidden>
+                <a class="button external-link" data-link="cloud" target="_blank" rel="noopener"><i data-icon="external"></i>Abrir Nextcloud</a>
+              </div>
+            </div>
+            <div id="file-list" class="rows" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-asistente" aria-labelledby="ai-title" hidden>
+          <div class="page-head"><p class="eyebrow"><i data-icon="spark"></i> WHISPER · OLLAMA · GEMINI</p><h1 id="ai-title">Asistente IA</h1><p>Consulta sobre OpenPulse o convierte una reunión de Linphone en un acta que puedas guardar en Nextcloud.</p></div>
+          <div class="assistant-grid">
+            <div class="panel chat-panel">
+              <div class="panel-title"><span class="tile amber"><i data-icon="spark"></i></span><div><h2>Asistente OpenPulse</h2><p id="engine-label">Procesamiento local con Ollama</p></div><button type="button" class="button" id="clear-chat">Nueva conversación</button></div>
+              <div id="chat-log" class="chat-log" role="log" aria-label="Conversación">
+                <div class="chat-welcome"><span class="tile amber"><i data-icon="spark"></i></span><div><strong>¿En qué puedo ayudarte?</strong><p>Pregunta por las herramientas de OpenPulse o carga una grabación para redactar un acta.</p><button class="button suggestion" id="prompt-voice" type="button">¿Cómo configuro Linphone?</button></div></div>
+              </div>
+              <form class="composer" id="assistant-form">
+                <label class="sr-only" for="prompt">Mensaje para el asistente</label>
+                <textarea id="prompt" maxlength="30000" rows="3" placeholder="Escribe una consulta…"></textarea>
+                <div class="composer-actions"><label class="select-label">Motor <select id="engine"><option value="local">Ollama local</option><option value="gemini" disabled>Gemini</option></select></label><button class="button primary" id="send" type="submit"><i data-icon="send"></i>Enviar</button></div>
+                <label class="consent" id="consent-label" hidden><input id="consent" type="checkbox">Autorizo enviar esta consulta y su historial a Gemini.</label>
+              </form>
+            </div>
+            <div>
+              <article class="panel workflow">
+                <span class="tile teal"><i data-icon="mic"></i></span><h2>Reunión a acta</h2>
+                <p>Importa el audio de Linphone o pega tus notas. Whisper transcribe el audio en el servidor local.</p>
+                <input type="file" id="audio" accept=".wav,.mp3,.m4a,.aac,.ogg,.opus,.webm,.flac" hidden>
+                <button type="button" class="button" id="audio-button"><i data-icon="upload"></i>Elegir grabación</button>
+                <span class="input-hint" id="audio-note" aria-live="polite">Hasta 24 MB</span>
+                <label class="form-label" for="notes">Transcripción o notas</label>
+                <textarea id="notes" rows="5" maxlength="28000" placeholder="Pega aquí los temas y acuerdos…"></textarea>
+                <button type="button" class="button primary" id="draft"><i data-icon="spark"></i>Generar borrador</button>
+              </article>
+              <article class="panel workflow page-panel" id="acta-panel" hidden>
+                <span class="tile violet"><i data-icon="file"></i></span><h2>Acta de reunión</h2><p id="save-location">Destino en Nextcloud: Mi unidad</p>
+                <form id="save-form">
+                  <label class="form-label" for="acta-text">Borrador editable</label><textarea id="acta-text" maxlength="30000" rows="7" required></textarea>
+                  <label class="form-label" for="acta-name">Nombre del archivo</label><input type="text" id="acta-name" maxlength="200" required>
+                  <div class="button-row"><button type="submit" class="button primary" id="save-acta"><i data-icon="cloud"></i>Guardar en Nextcloud</button><a class="button" id="open-saved" hidden>Ver archivo</a></div>
+                </form>
+                <form id="share-acta" hidden>
+                  <label class="form-label" for="share-room">Compartir acta guardada con una sala de Talk</label>
+                  <select id="share-room" required></select>
+                  <button class="button" id="share-button" type="submit"><i data-icon="message"></i>Compartir acta</button>
+                </form>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-operacion" aria-labelledby="ops-title" hidden>
+          <div class="page-head"><p class="eyebrow"><i data-icon="chart"></i> MONITOREO · ADMINISTRACIÓN</p><h1 id="ops-title">Operación y SLA</h1><p>Consulta el estado técnico, abre las métricas y administra los servicios con tu cuenta autorizada.</p></div>
+          <div class="dashboard-grid ops-grid">
+            <div class="panel"><div class="panel-title"><span class="tile blue"><i data-icon="pulse"></i></span><div><h2>Estado de servicios</h2><p>Comprobaciones desde Spring Web</p></div><button class="button icon-only status-refresh" type="button" aria-label="Actualizar servicios"><i data-icon="refresh"></i></button></div><div id="ops-status" class="rows" aria-live="polite"></div></div>
+            <div class="panel"><div class="panel-title"><span class="tile teal"><i data-icon="shield"></i></span><div><h2>Consolas de operación</h2><p>Cada servicio aplica sus permisos</p></div></div>
+              <div class="rows">
+                <a class="console-row external-link" data-link="metrics" target="_blank" rel="noopener"><i data-icon="chart"></i><span><strong>Grafana</strong><small>Disponibilidad y métricas de calidad</small></span><i data-icon="external"></i></a>
+                <a class="console-row external-link" data-link="cloudAdmin" target="_blank" rel="noopener"><i data-icon="cloud"></i><span><strong>Administrar Nextcloud</strong><small>Usuarios y servicios de colaboración</small></span><i data-icon="external"></i></a>
+                <a class="console-row external-link" data-link="identity" target="_blank" rel="noopener"><i data-icon="lock"></i><span><strong>Identidad y SSO</strong><small>Consola de Keycloak</small></span><i data-icon="external"></i></a>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer class="footer"><span>OpenPulse AI</span><span>TEL139 · Ingeniería de Redes Unificadas · PUCP</span></footer>
+      </main>
+    </div>
+  </div>
+  <dialog id="session-dialog" aria-labelledby="session-title">
+    <div class="dialog-top"><span class="tile teal"><i data-icon="lock"></i></span><button class="button icon-only" id="close-session" aria-label="Cerrar" type="button"><i data-icon="close"></i></button></div>
+    <h2 id="session-title">Conecta tu cuenta</h2>
+    <p id="session-note">Autoriza el portal en Nextcloud para usar tus archivos, salas y el asistente.</p>
+    <div class="button-row">
+      <button type="button" class="button primary" id="start-session"><i data-icon="login"></i>Preparar conexión</button>
+      <a class="button primary" id="authorize-session" target="_blank" rel="noopener" hidden><i data-icon="external"></i>Autorizar en Nextcloud</a>
+      <button type="button" class="button" id="logout" hidden>Cerrar sesión del portal</button>
+    </div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

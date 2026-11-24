@@ -64,3 +64,15 @@ Ningún script contiene resultados escritos en el código: todos muestran lo que
 - **`asterisk/scripts/sla_exporter.py`**: publica en `:9105/metrics` la disponibilidad y latencia de los servicios, y el jitter, la pérdida, el RTT y el MOS de las llamadas activas. Sin llamadas, los paneles de voz quedan sin datos.
 - **`scripts/2_mediciones_completas_sla.py`**: calcula el MOS (modelo E simplificado), el p95 del jitter y el % de llamadas dentro del SLA desde un CSV de llamadas medidas, y el p95 de los accesos HTTPS.
 - **`scripts/3_ia_whisper_ollama_acta.py`**: Ejecuta el pipeline local de **Edge AI** (**Whisper** `MIT` + **Ollama** `MIT` con modelo **`Qwen2.5` `Apache-2.0`**) para transcribir una reunión del *Estudio Contable Andes & Asociados S.A.C.* y generar automáticamente el documento **[Acta_Reunion_Andes_IA.md](Acta_Reunion_Andes_IA.md)**.
+
+## 4. Portal de comunicaciones unificadas
+
+OpenPulse Portal agrega una interfaz propia en **Spring Web / Java 21**. Reúne las
+extensiones de Asterisk con apertura directa de Linphone, las salas y la presencia
+de Nextcloud Talk, los archivos de Nextcloud con acceso a Collabora, las actas con
+IA y las consolas de monitoreo y administración.
+
+Después de aprovisionar el stack, ejecuta `docker compose --profile portal up -d --build portal`
+y `docker compose up -d caddy`. Abre `https://IP_DEL_SERVIDOR:8445` con la CA de
+Caddy de tu entorno. Consulta [la guía del portal](docs/PORTAL_UNIFICADO.md) para
+la demostración, el perfil de IA local y la configuración optativa de Gemini.

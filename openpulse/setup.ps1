@@ -59,7 +59,7 @@ $caddyContent = @"
 
 https://${ip}:8443, https://localhost:8443 {
 	tls internal
-	reverse_proxy nextcloud:80 {
+	reverse_proxy nextcloud-proxy:80 {
 		header_up X-Forwarded-Proto https
 		header_up X-Forwarded-Port 8443
 	}
@@ -71,6 +71,11 @@ https://${ip}:8444, https://localhost:8444 {
 		header_up X-Forwarded-Proto https
 		header_up X-Forwarded-Port 8444
 	}
+}
+
+https://${ip}:8445, https://localhost:8445 {
+	tls internal
+	reverse_proxy portal:8092
 }
 
 https://${ip}:9443, https://localhost:9443 {
@@ -148,7 +153,8 @@ foreach ($u in $usuarios) {
 Ok "Usuarios wantaurco, rpretel, avallejo, lgil y lparedes listos (clave: USERS_PASSWORD de .env)"
 
 Paso "Conectando Nextcloud con Collabora Online (edicion compartida de documentos)"
-occ richdocuments:activate-config "--wopi-url=http://${ip}:9980" "--callback-url=http://${ip}:8080"
+occ richdocuments:activate-config "--wopi-url=http://collabora:9980" "--callback-url=http://nextcloud:80"
+occ config:app:set richdocuments public_wopi_url "--value=https://${ip}:9443"
 Ok "Collabora Online conectado con Nextcloud"
 
 # ---------------------------------------------------------------- 5. Keycloak (SSO + 2FA + Admin Nominal)
